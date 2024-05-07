@@ -1,19 +1,88 @@
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import Header from './Header'
+import {auth} from '../utils/firbase'
+import {CheckValidateemailData,CheckValidatepasswordData} from '../utils/validate'
+import {  createUserWithEmailAndPassword,signInWithEmailAndPassword  } from "firebase/auth";
 const Login = () => {
+  const [isSignin,setSignin] = useState(true)
+  const [passerror,setpasserror] = useState("")
+  const [emailerror,setemailerror] = useState("")
+  const [errormsg,seterror] = useState("")
+  const ToggleForm = ()=>{
+    setSignin(!isSignin)
+  }
+
+  const email = useRef(null)
+  const password = useRef(null)
+  const name = useRef(null)
+  const HandleButtonClick = ()=>{
+    //validate form
+  //  console.log(email.current.value,password.current.value);
+   var message1 =  CheckValidateemailData(email.current.value)
+   var message2 =  CheckValidatepasswordData(password.current.value)
+   setemailerror(message1)
+   setpasserror(message2)
+   if(message1 && message2) return message1 && message2
+   if(message1 == null && message2 == null){
+    //signin - signup
+    if(!isSignin){
+      //signup logic
+      createUserWithEmailAndPassword(auth, email.current.value, password.current.value)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        console.log(user);
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        seterror(errorMessage +" "+ errorCode)
+      });
+    }else{
+      //signin logic 
+      signInWithEmailAndPassword(auth, email.current.value, password.current.value)
+      .then((userCredential) => {
+        // Signed in 
+        const user = userCredential.user;
+        console.log(user);
+        // ...
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        seterror(errorMessage +" "+ errorCode)
+      }); 
+    }
+
+   }
+  }
+
+
   return (
     <div>
       <Header />
       <div style={{backgroundImage:`url('https://assets.nflxext.com/ffe/siteui/vlv3/d253acf4-a1e2-4462-a416-f78802dc2d85/f04bf88c-f71c-4d02-82ed-adb870b8f8db/IN-en-20240429-POP_SIGNUP_TWO_WEEKS-perspective_WEB_658a042e-62cf-473d-8da0-7b875f23e2ef_small.jpg')` ,backgroundSize:"cover",backgroundPosition:"center"}} className= ' bg-black w-full h-screen'>
          <div className='w-full h-full flex items-end justify-center  bg-[#0000008e]'>
-            <form className='pt-5 px-[8vh]  text-white w-[60vh] flex flex-col items-start justify-start h-[85vh] rounded bg-[#0000009c]' action="">
-                <h2 className='text-[5vh] font-[350]'>Sign In</h2>
+            <form onSubmit={(e)=>e.preventDefault()} className='pt-5 px-[8vh]  text-white w-[60vh] flex flex-col items-start justify-start h-[85vh] rounded bg-[#0000009c]' action="">
+                <h2 className='text-[5vh] font-[350]'>{isSignin ? 'Sign in' : 'Sign up'}</h2>
                <div className='text-slate-400 w-full pt-5 gap-5 flex flex-col items-center'>
-               <input  className='bg-[#111214a5] rounded border-red-600 border-[1px] pl-3 pr-[20vh] py-3 text-[10px] outline-none' type="text" placeholder='Email or mobile number' />
-                <input className='bg-[#111214a5] rounded border-red-600 border-[1px] pl-3 pr-[20vh] py-3 text-[10px] outline-none' type="password" placeholder='Password'  />
-                <button className='bg-[#E50914] text-[white] w-[105%] rounded text-[13px]  py-1  text-center '>sign in</button>
+                {
+                !isSignin && 
+                <input ref={name}   className='bg-[#111214a5] rounded border-red-600 border-[1px] pl-3 pr-[20vh] py-3 text-[2vh] outline-none' type="text" placeholder='Full Name'  />
+                }
+              <div>
+              <input ref={email}    className='bg-[#111214a5] rounded border-red-600 border-[1px] pl-3 pr-[20vh] py-3 text-[2vh] outline-none' type="text" placeholder='Email or mobile number' />
+                <h2 className='text-red-600 ml-1 text-xs'>{ emailerror }</h2>
+              </div>
+              <div>
+               <input ref={password}   className='bg-[#111214a5] rounded border-red-600 border-[1px] pl-3 pr-[20vh] py-3 text-[2vh] outline-none' type="password" placeholder='Password'  />
+               <h2 className='text-red-600 ml-1 text-xs'>{ passerror }</h2>
+              </div>
+                <h2 className='text-red-600 m-0 text-xs'>{errormsg}</h2>
+                <button onClick={HandleButtonClick} className='bg-[#E50914] text-[white] w-[100%] rounded text-[2.5vh]  py-2  text-center '>
+                {isSignin ? 'Sign in' : 'Sign up'}
+                </button>
                </div>
-                <h2 className='text-[12px] mt-10 font-[350] font-[helvetica]'>New to Netflix? <span className='font-[500]'>Sign up now.</span></h2>
+                <h2 className='cursor-pointer text-[12px] mt-10 font-[350] font-[helvetica]'>{isSignin ? 'New to Netflix?' : 'Already registered?'} <span onClick={ToggleForm} className='font-[300] font-[mono]'>{isSignin ? 'Sign up now' : 'Sign in now'}</span></h2>
             </form>
          </div>
       </div>
