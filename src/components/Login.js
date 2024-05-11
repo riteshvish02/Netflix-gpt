@@ -3,11 +3,14 @@ import Header from './Header'
 import {auth} from '../utils/firbase'
 import {CheckValidateemailData,CheckValidatepasswordData} from '../utils/validate'
 import {  createUserWithEmailAndPassword,signInWithEmailAndPassword  } from "firebase/auth";
+import {  updateProfile } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { addUser } from '../utils/userSlice';
 const Login = () => {
 
   const navigate = useNavigate()
-
+  const dispatch = useDispatch()
   const [isSignin,setSignin] = useState(true)
   const [passerror,setpasserror] = useState("")
   const [emailerror,setemailerror] = useState("")
@@ -21,34 +24,49 @@ const Login = () => {
   const name = useRef(null)
   const HandleButtonClick = ()=>{
     //validate form
-  //  console.log(email.current.value,password.current.value);
    var message1 =  CheckValidateemailData(email.current.value)
    var message2 =  CheckValidatepasswordData(password.current.value)
    setemailerror(message1)
    setpasserror(message2)
    if(message1 && message2) return ;
-   if(message1 == null && message2 == null){
+  if(message1 == null && message2 == null){
     //signin - signup
-    if(!isSignin){
-      //signup logic
-      createUserWithEmailAndPassword(auth, email.current.value, password.current.value)
-      .then((userCredential) => {
+  if(!isSignin){
+    //signup logic
+    createUserWithEmailAndPassword(auth, email.current.value, password.current.value)
+    .then((userCredential) => {
         const user = userCredential.user;
-        console.log(user);
-        navigate('/browse')
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        seterror(errorMessage +" "+ errorCode)
-      });
-    }else{
+            updateProfile(user, {
+              displayName:name.current.value, photoURL: "https://plus.unsplash.com/premium_photo-1669048776605-28ea2e52ae66?q=80&w=1770&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            }).then(() => {
+              // Profile updated!
+                const {uid,email,displayName,photoURL} = user
+                dispatch(
+                  addUser({
+                    uid,
+                    email,
+                    displayName,
+                    photoURL
+                  })
+                )
+              // ...
+            }).catch((error) => {
+              seterror(error.message)
+            });
+      // console.log(user);
+      navigate('/browse')
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      seterror(errorMessage +" "+ errorCode)
+    });
+ }else{
       //signin logic 
       signInWithEmailAndPassword(auth, email.current.value, password.current.value)
       .then((userCredential) => {
         // Signed in 
         const user = userCredential.user;
-        console.log(user);
         navigate('/browse')
         // ...
       })
@@ -57,9 +75,9 @@ const Login = () => {
         const errorMessage = error.message;
         seterror(errorMessage +" "+ errorCode)
       }); 
-    }
+  }
 
-   }
+  }
   }
 
 

@@ -24,6 +24,7 @@ const Body = () => {
         console.log("created");
       
         onAuthStateChanged(auth, (user) => {
+           console.log("log log");
         if (user) {
             // User is signed in, see docs for a list of available properties
             // https://firebase.google.com/docs/reference/js/auth.user
